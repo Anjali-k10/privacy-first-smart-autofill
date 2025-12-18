@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Privacy-First Smart Autofill</title>
+	<link rel="stylesheet" href="popup.css">
+</head>
+<body>
+	<header>
+		<h1>Smart Autofill</h1>
+	</header>
+	<main>
+		<p>Autofill forms with non-sensitive data only. Your privacy is protected.</p>
+		<div id="status" aria-live="polite"></div>
+		<div class="actions">
+  <button id="allow-btn" type="button">Allow on this site</button>
+  <button id="deny-btn" type="button">Deny on this site</button>
+</div>
+	</main>
+	<script src="popup.js"></script>
+</body>
+</html>
