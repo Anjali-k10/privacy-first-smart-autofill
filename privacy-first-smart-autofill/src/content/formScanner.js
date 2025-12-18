@@ -2,7 +2,7 @@ const DEBUG_PREFIX = '[SmartAutofill:FormScanner]';
 
 function getLabelText(field) {
 	try {
-		// Try <label for="id">
+	
 		if (field.id) {
 			const label = document.querySelector(`label[for="${field.id}"]`);
 			if (label && label.textContent) {
@@ -10,7 +10,7 @@ function getLabelText(field) {
 			}
 		}
 
-		// Try wrapping <label>
+		
 		let parent = field.parentElement;
 		while (parent) {
 			if (parent.tagName === 'LABEL') {
@@ -52,7 +52,7 @@ function scanFormFields() {
 
 		return fields
 			.map(getFieldMetadata)
-			.filter(Boolean); // remove null entries safely
+			.filter(Boolean); 
 	} catch (error) {
 		console.error(`${DEBUG_PREFIX} Form scanning failed`, error);
 		return [];
