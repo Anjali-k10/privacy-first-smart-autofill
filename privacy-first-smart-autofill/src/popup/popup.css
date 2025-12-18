@@ -1,0 +1,82 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
+:root {
+	--primary: #6C63FF;
+	--background: #F4F6FF;
+	--success: #00B894;
+	--danger: #FF6B6B;
+	--text-dark: #2D3436;
+	--text-light: #636E72;
+}
+
+body {
+	font-family: 'Inter', Arial, sans-serif;
+	background: var(--background);
+	color: var(--text-dark);
+	margin: 0;
+	padding: 16px;
+	min-width: 260px;
+	min-height: 180px;
+	box-sizing: border-box;
+}
+
+header h1 {
+	font-size: 1.1rem;
+	font-weight: 600;
+	margin: 0 0 8px 0;
+	color: var(--primary);
+}
+
+main p {
+	margin: 0 0 16px 0;
+	color: var(--text-light);
+	font-size: 0.95rem;
+}
+
+#status {
+	color: var(--text-light);
+	font-size: 0.92rem;
+	margin-bottom: 16px;
+	min-height: 18px;
+}
+
+.actions {
+	display: flex;
+	gap: 10px;
+}
+
+button {
+	font-family: inherit;
+	font-size: 0.97rem;
+	padding: 8px 16px;
+	border: none;
+	border-radius: 6px;
+	cursor: pointer;
+	transition: background 0.1s;
+}
+button:focus-visible {
+	outline: 2px solid var(--primary);
+	outline-offset: 2px;
+}
+button:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+#allow-btn {
+	background: var(--success);
+	color: #fff;
+}
+
+#deny-btn {
+	background: var(--danger);
+	color: #fff;
+}
+
+#allow-btn:hover, #allow-btn:focus {
+	background: #019a77;
+}
+
+#deny-btn:hover, #deny-btn:focus {
+	background: #e55a5a;
+}
