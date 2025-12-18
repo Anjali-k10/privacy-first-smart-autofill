@@ -1,3 +1,4 @@
+import { initAutofillEngine } from './autofillEngine.js';
 (function() {
 	const origin = window.location.origin;
 	chrome.runtime.sendMessage({ type: 'CHECK_SITE_PERMISSION', origin }, (response) => {
@@ -8,6 +9,6 @@
 	});
 
 	function initContentFeatures() {
-		// Placeholder for future content logic
+		initAutofillEngine();
 	}
 })();
