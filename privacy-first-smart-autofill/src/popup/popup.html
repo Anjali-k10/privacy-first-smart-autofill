@@ -1,23 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Privacy-First Smart Autofill</title>
-	<link rel="stylesheet" href="popup.css">
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Smart Autofill</title>
+	<link rel="stylesheet" href="popup.css" />
 </head>
+
 <body>
 	<header>
 		<h1>Smart Autofill</h1>
 	</header>
+
 	<main>
-		<p>Autofill forms with non-sensitive data only. Your privacy is protected.</p>
+		<h2 id="popup-title">Enable Smart Autofill on this site?</h2>
+
+		<p id="popup-subtitle">
+			Faster form filling — always under your control.
+		</p>
+
 		<div id="status" aria-live="polite"></div>
+
+		<!-- Site permission -->
 		<div class="actions">
-  <button id="allow-btn" type="button">Allow on this site</button>
-  <button id="deny-btn" type="button">Deny on this site</button>
-</div>
+			<button id="allow-btn" type="button">Enable</button>
+			<button id="deny-btn" type="button">Not now</button>
+		</div>
+
+		<!-- Manual autofill -->
+		<div class="actions" style="margin-top: 10px;">
+			<button id="autofill-btn" type="button" hidden>
+				Autofill now
+			</button>
+		</div>
+
+		<!-- Form-level save -->
+		<div class="actions" style="margin-top: 10px;">
+			<button id="save-form-btn" type="button">
+				Save form data
+			</button>
+		</div>
 	</main>
+
 	<script src="popup.js"></script>
 </body>
 </html>

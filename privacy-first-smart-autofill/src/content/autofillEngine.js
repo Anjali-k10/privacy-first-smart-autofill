@@ -1,6 +1,9 @@
 import { scanFormFields } from './formScanner.js';
 import { isSensitiveField } from './fieldClassifier.js';
-import { isFieldApproved, getApprovedFields } from '../storage/storageManager.js';
+import {
+	isFieldApproved,
+	getApprovedFields
+} from '../storage/storageManager.js';
 import { findMatchingField } from '../../utils/textUtils.js';
 
 const LOG_PREFIX = '[SmartAutofill:AutofillEngine]';
@@ -9,12 +12,15 @@ const MATCHING_LOG_PREFIX = '[SmartAutofill:Matching]';
 
 let matchedFields = [];
 
+/* ---------- INIT & MATCHING ---------- */
+
 async function initAutofillEngine() {
-	// reset on each run
 	matchedFields = [];
 
 	const allFields = scanFormFields();
-	const nonSensitiveFields = allFields.filter(field => !isSensitiveField(field));
+	const nonSensitiveFields = allFields.filter(
+		field => !isSensitiveField(field)
+	);
 
 	console.log(`${LOG_PREFIX} Non-sensitive fields found:`, nonSensitiveFields);
 
@@ -30,7 +36,7 @@ async function initAutofillEngine() {
 		const match = findMatchingField(field, approvedFields);
 		if (match) {
 			console.log(
-				`${MATCHING_LOG_PREFIX} Matched '${fieldKey}' → '${match.fieldKey}' (confidence: ${match.confidence})`
+				`${MATCHING_LOG_PREFIX} Matched '${fieldKey}' → '${match.fieldKey}' (${match.confidence})`
 			);
 			matchedFields.push({ field, match });
 			continue;
@@ -47,7 +53,6 @@ async function initAutofillEngine() {
 		});
 	}
 
-	// notify popup once
 	if (matchedFields.length > 0) {
 		chrome.runtime.sendMessage({
 			type: 'AUTOFILL_AVAILABLE',
@@ -58,7 +63,7 @@ async function initAutofillEngine() {
 
 /* ---------- MANUAL AUTOFILL ---------- */
 
-chrome.runtime.onMessage.addListener((message) => {
+chrome.runtime.onMessage.addListener(async (message) => {
 	if (message?.type !== 'TRIGGER_AUTOFILL') return;
 
 	if (!matchedFields.length) {
@@ -68,7 +73,9 @@ chrome.runtime.onMessage.addListener((message) => {
 
 	console.log('[SmartAutofill] Manual autofill triggered');
 
-	for (const { field } of matchedFields) {
+	const approvedFields = await getApprovedFields();
+
+	for (const { field, match } of matchedFields) {
 		const selector =
 			field.id
 				? `#${CSS.escape(field.id)}`
@@ -81,14 +88,56 @@ chrome.runtime.onMessage.addListener((message) => {
 		const input = document.querySelector(selector);
 		if (!input) continue;
 
-		// temporary placeholder (safe)
-		input.value = 'Filled by Smart Autofill';
+		const savedValue = approvedFields?.[match.fieldKey]?.value;
+		if (savedValue == null) continue;
+
+		/* ---------- INPUT TYPE HANDLING ---------- */
+
+		// SELECT (dropdown)
+		if (input.tagName === 'SELECT') {
+			input.value = savedValue;
+			input.dispatchEvent(new Event('change', { bubbles: true }));
+			continue;
+		}
+
+		// RADIO BUTTON
+		if (input.type === 'radio' && input.name) {
+			const radios = document.querySelectorAll(
+				`input[type="radio"][name="${CSS.escape(input.name)}"]`
+			);
+			radios.forEach(radio => {
+				radio.checked = radio.value === savedValue;
+			});
+			continue;
+		}
+
+		// CHECKBOX
+		if (input.type === 'checkbox') {
+			// Multiple checkboxes (same name)
+			if (Array.isArray(savedValue) && input.name) {
+				const checkboxes = document.querySelectorAll(
+					`input[type="checkbox"][name="${CSS.escape(input.name)}"]`
+				);
+				checkboxes.forEach(cb => {
+					cb.checked = savedValue.includes(cb.value);
+				});
+			} else {
+				// Single checkbox
+				input.checked = Boolean(savedValue);
+			}
+			continue;
+		}
+
+		// DEFAULT TEXT / NUMBER / EMAIL / ETC
+		input.value = savedValue;
 		input.dispatchEvent(new Event('input', { bubbles: true }));
 	}
 
-	// prevent repeated fills
+	// Prevent repeated autofill
 	matchedFields = [];
 });
 
 export { initAutofillEngine };
+
+
 
