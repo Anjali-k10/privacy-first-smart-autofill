@@ -1,24 +1,14 @@
+import { saveApprovedField } from '../storage/storageManager.js';
+
 const statusEl = document.getElementById('status');
 const allowBtn = document.getElementById('allow-btn');
 const denyBtn = document.getElementById('deny-btn');
 
 let currentOrigin = '';
+let pendingField = null;
 
-function setStatus(allowed) {
-	if (allowed) {
-		statusEl.textContent = 'Autofill enabled on this site';
-		allowBtn.disabled = true;
-		denyBtn.disabled = false;
-	} else {
-		statusEl.textContent = 'Autofill is disabled on this site';
-		allowBtn.disabled = false;
-		denyBtn.disabled = true;
-	}
-}
-
-function updatePermissionUI(allowedSites) {
-	const allowed = !!allowedSites[currentOrigin];
-	setStatus(allowed);
+function setStatus(text) {
+	statusEl.textContent = text;
 }
 
 function getOriginFromUrl(url) {
@@ -33,37 +23,47 @@ function loadPermissionState() {
 	chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
 		const tab = tabs[0];
 		if (!tab || !tab.url) {
-			statusEl.textContent = 'Unable to detect site.';
-			allowBtn.disabled = true;
-			denyBtn.disabled = true;
+			setStatus('Unable to detect site.');
 			return;
 		}
+
 		currentOrigin = getOriginFromUrl(tab.url);
+
 		chrome.storage.local.get(['allowedSites'], (result) => {
 			const allowedSites = result.allowedSites || {};
-			updatePermissionUI(allowedSites);
+			if (allowedSites[currentOrigin]) {
+				setStatus('Autofill enabled on this site');
+			} else {
+				setStatus('Autofill disabled on this site');
+			}
 		});
 	});
 }
 
-allowBtn.addEventListener('click', () => {
-	chrome.storage.local.get(['allowedSites'], (result) => {
-		const allowedSites = result.allowedSites || {};
-		allowedSites[currentOrigin] = true;
-		chrome.storage.local.set({ allowedSites }, () => {
-			setStatus(true);
-		});
-	});
+allowBtn.addEventListener('click', async () => {
+	if (pendingField) {
+		const { fieldKey, label, type } = pendingField;
+		await saveApprovedField(fieldKey, { label, type });
+		setStatus(`Field saved: ${label || fieldKey}`);
+		pendingField = null;
+		return;
+	}
 });
 
 denyBtn.addEventListener('click', () => {
-	chrome.storage.local.get(['allowedSites'], (result) => {
-		const allowedSites = result.allowedSites || {};
-		delete allowedSites[currentOrigin];
-		chrome.storage.local.set({ allowedSites }, () => {
-			setStatus(false);
-		});
-	});
+	if (pendingField) {
+		setStatus('Field ignored');
+		pendingField = null;
+		return;
+	}
+});
+
+chrome.runtime.onMessage.addListener((message) => {
+	if (message?.type === 'FIELD_CONSENT_REQUIRED') {
+		pendingField = message.payload;
+		setStatus(`Remember this field? ${pendingField.label || pendingField.fieldKey}`);
+	}
 });
 
 document.addEventListener('DOMContentLoaded', loadPermissionState);
+
